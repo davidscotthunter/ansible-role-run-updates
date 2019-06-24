@@ -11,9 +11,18 @@
 - name: Check if reboot is required
   command: /bin/bash -c "/bin/needs-restarting -r"
   register: reboot_required
+  ignore_errors: true
 
 - name: Reboot the system if necessary
-  command: /bin/bash -c "/sbin/shutdown 1 'System is rebooting for system updates'"
+  command: /bin/bash -c "/sbin/shutdown -r +1 'System is rebooting for system updates'"
   when: ( reboot_required.rc != 0 )
+  ignore_errors: yes
 
 - name: Wait for system to come back up
+  local_action:
+    module: wait_for
+    host: "{{ ansible_default_ipv4.address }}"
+    port: 22
+    delay: 90
+    state: started
+  when: ( reboot_required.rc != 0 )
