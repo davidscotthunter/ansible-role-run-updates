@@ -1,0 +1,19 @@
+---
+- name: Update all packages via yum
+  yum:
+    name: '*'
+    state: latest
+    update_cache: yes
+
+- name: Clean yum cache
+  command: /bin/bash -c "/usr/bin/yum clean all"
+
+- name: Check if reboot is required
+  command: /bin/bash -c "/bin/needs-restarting -r"
+  register: reboot_required
+
+- name: Reboot the system if necessary
+  command: /bin/bash -c "/sbin/shutdown 1 'System is rebooting for system updates'"
+  when: ( reboot_required.rc != 0 )
+
+- name: Wait for system to come back up
